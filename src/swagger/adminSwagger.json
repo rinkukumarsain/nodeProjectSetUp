@@ -1,0 +1,114 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "playT-plus-admin",
+    "description": "Description of my API",
+    "version": "1.0.0"
+  },
+  "schemas": [
+    "http"
+  ],
+  "basePath": "/admin/v1",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/user/login": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "description": "fetch data by /user/login",
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "description": "please enter code",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/login"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "$ref": "#/definitions/loginResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/errorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "errorResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "success status",
+          "example": false
+        },
+        "message": {
+          "type": "string",
+          "description": "something is wrong",
+          "example": "something is wrong"
+        }
+      }
+    },
+    "login": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Enter email",
+          "example": "superAdmin@gmail.com"
+        },
+        "password": {
+          "type": "string",
+          "description": "Enter password",
+          "example": "12345678"
+        }
+      }
+    },
+    "loginResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "true",
+          "example": true
+        },
+        "message": {
+          "type": "string",
+          "description": "User login Successfully.",
+          "example": "User login Successfully."
+        },
+        "data": {
+          "type": "object",
+          "description": "Successfully Data",
+          "example": {
+            "userId": "6479c2e393445893d7d4fa81",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NDc5YzJlMzkzNDQ1ODkzZDdkNGZhODEiLCJlbWFpbCI6InN1cGVyQWRtaW5AZ21haWwuY29tIiwiaWF0IjoxNzIwNTA4MTQ2fQ.j5RmlV_x_ODm-C_Osk3RNrlStaPYket8AJepYA1satE"
+          }
+        }
+      }
+    }
+  }
+}
