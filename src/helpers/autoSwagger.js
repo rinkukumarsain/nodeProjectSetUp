@@ -1,17 +1,10 @@
 
 const fs = require('fs');
+const { statusCode, resMessage } = require('../config/default.json');
 
 
 exports.autoSwagger = async (filePath, req, res) => {
     try {
-        /*   // Define the path to the JSON file
-          let filePath;
-          if (req.originalUrl.split('/')[1] === 'api') {
-              filePath = path.join(__dirname, '../swagger/appSwagger.json'); //api
-          } else {
-              filePath = path.join(__dirname, '../swagger/adminSwagger.json'); //admin
-          }; */
-
         // Read the JSON file synchronously
         let data;
         try {
@@ -47,9 +40,7 @@ exports.autoSwagger = async (filePath, req, res) => {
                     // Send the default content as the response
                 });
 
-            }/*  else {
-                Internal_Server_Error;
-            } */
+            }
         }
 
         if (!data) {
@@ -146,9 +137,9 @@ exports.autoSwagger = async (filePath, req, res) => {
 
         // Return a success message with the modified data
         return {
-            statusCode: 200,
+            statusCode: statusCode.OK,
             success: true,
-            message: 'Data updated successfully',
+            message: resMessage.Data_Updated_Successfully,
             data: adminSwagger
         };
 
@@ -156,7 +147,7 @@ exports.autoSwagger = async (filePath, req, res) => {
         // Handle any errors that occur during the operation
         console.error(error);
         return {
-            statusCode: 400,
+            statusCode: statusCode.BAD_REQUEST,
             success: false,
             message: error.message
         };
@@ -192,7 +183,7 @@ exports.manageParameters = async (req) => {
                 };
                 for (const kyes of Object.keys(req.body)) {
                     schemas[req.url.slice(1)].properties[kyes] = {
-                        'type': typeof kyes,
+                        'type': typeof req.body[kyes],
                         'description': `Enter ${kyes}`,
                         'example': req.body[kyes]
                     };
@@ -208,14 +199,18 @@ exports.manageParameters = async (req) => {
                     }
                 }
                 for (const kyes of Object.keys(req.body)) {
-                    returnObj.parameters.push({
+                    let obj = {
                         'name': kyes,
                         'in': 'formData',
-                        'type': files.includes(kyes) ? 'file' : typeof kyes,
+                        'type': files.includes(kyes) ? 'file' : typeof req.body[kyes],
                         'description': `please enter ${kyes}`,
                         'required': false,
                         'example': files.includes(kyes) ? '' : req.body[kyes]
-                    });
+                    };
+                    if (typeof req.body[kyes] === 'object' && req.body[kyes].length > 0) {
+                        obj['type'] = 'array';
+                    }
+                    returnObj.parameters.push(obj);
                 }
             }
         } else if (Object.keys(req.query).length > 0 && req.query) {
