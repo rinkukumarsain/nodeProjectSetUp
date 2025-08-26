@@ -12,7 +12,7 @@ exports.autoSwagger = async (filePath, req, res) => {
         } catch (error) {
             if (error.code === 'ENOENT') {
                 const defaultContent = JSON.stringify({
-                    'swagger': '2.0', 'info': { 'title': 'api-Docs', 'version': '1.0.0' }, 'basePath': '/admin/v1', 'schemas': ['http'], 'paths': {},
+                    'swagger': '2.0', 'info': { 'title': `${req.originalUrl.split('/')[1]}-Docs`, 'version': '1.0.0' }, 'basePath': `/${req.originalUrl.split('/')[1]}/${req.originalUrl.split('/')[2]}`, 'schemas': ['http'], 'paths': {},
                     'definitions': {
                         'errorResponse': {
                             'type': 'object',
@@ -84,11 +84,19 @@ exports.autoSwagger = async (filePath, req, res) => {
         adminSwagger.paths[url] = {
             [method.toLowerCase()]: obj
         };
+        let arr = url.split('/');
+        // Remove the first two items
+        arr = arr.slice(2);
+        // Join the remaining parts and capitalize the first letter of each part except the first one
+        let resName = arr[0] + arr.slice(1).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+        console.log(resName, '----');
+        // hv
         adminSwagger.paths[url][method.toLowerCase()]['responses'] = {
             '200': {
                 'description': 'Successful response',
                 'schema': {
-                    '$ref': `#/definitions/${url.split('/')[url.split('/').length - 1]}Response`
+                    // '$ref': `#/definitions/${url.split('/')[url.split('/').length - 1]}Response`
+                    '$ref': `#/definitions/${resName}Response`
                 }
             },
             '400': {
@@ -98,7 +106,7 @@ exports.autoSwagger = async (filePath, req, res) => {
                 }
             }
         };
-
+        //   schemas[`${resName}Response`] = {
         schemas[`${url.split('/')[url.split('/').length - 1]}Response`] = {
             'type': typeof res,
             'properties': {}
@@ -119,6 +127,7 @@ exports.autoSwagger = async (filePath, req, res) => {
         /* ----------if data is arrya then 0 index else only obj----------- */
 
         for (const item of Object.keys(res)) {
+            //   schemas[`${resName}Response`]['properties'][item] = {
             schemas[`${url.split('/')[url.split('/').length - 1]}Response`]['properties'][item] = {
                 'type': typeof res[item],
                 'description': typeof res[item] === 'object' ? 'Successfully Data' : `${res[item]}`,
@@ -193,23 +202,37 @@ exports.manageParameters = async (req) => {
                 let files = [];
                 if (req.file) {
                     files.push(req.file.fieldname);
-                } else if (req.file?.length > 0) {
-                    for (const item of req.file) {
+                } else if (req.files?.length > 0) {
+                    for (const item of req.files) {
                         files.push(item.fieldname);
                     }
                 }
+
                 for (const kyes of Object.keys(req.body)) {
                     let obj = {
                         'name': kyes,
-                        'in': 'formData',
-                        'type': files.includes(kyes) ? 'file' : typeof req.body[kyes],
-                        'description': `please enter ${kyes}`,
-                        'required': false,
-                        'example': files.includes(kyes) ? '' : req.body[kyes]
+                        'in': 'formData'
                     };
-                    if (typeof req.body[kyes] === 'object' && req.body[kyes].length > 0) {
+                    if (files.includes(kyes)) {
+                        if (Array.isArray(req.body[kyes]) && req.body[kyes].length > 0) {
+                            obj['type'] = 'array';
+                            obj['items'] = { 'type': 'file' };
+                        } else {
+                            obj['type'] = 'file';
+                        }
+                        obj['example'] = 'file';
+                    } else if (typeof req.body[kyes] === 'object' && req.body[kyes].length > 0) {
                         obj['type'] = 'array';
+                        obj['example'] = req.body[kyes];
+                    } else {
+                        obj['type'] = typeof req.body[kyes];
+                        obj['example'] = req.body[kyes];
                     }
+                    obj = {
+                        ...obj,
+                        'description': `please enter ${kyes}`,
+                        'required': false
+                    };
                     returnObj.parameters.push(obj);
                 }
             }
